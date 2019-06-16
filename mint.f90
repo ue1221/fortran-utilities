@@ -5,7 +5,7 @@ module mod_mint
     integer(8) :: n
   end type mint
   interface assignment(=)
-    module procedure assign1, assign2
+    module procedure assign1, assign2, assign3_1, assign3_2, assign4_1, assign4_2
   end interface assignment(=)
   interface operator(+)
     module procedure add0, add1_1, add1_2, add2_1, add2_2
@@ -56,14 +56,45 @@ contains
     implicit none
     type(mint), intent(inout) :: a
     integer, intent(in) :: b
-    integer(8) :: c
-    c = int(b,8)
-    do while (c.lt.0_8)
-      c = c + modul
-    end do
-    a%n = mod(c,modul)
+    call assign1(a,int(b,8))
     return
   end subroutine assign2
+  subroutine assign3_1(a,b)
+    implicit none
+    type(mint), intent(inout) :: a(:)
+    integer(8), intent(in) :: b
+    integer :: n, i
+    n = size(a)
+    do i = 1, n
+      call assign1(a(i),b)
+    end do
+    return
+  end subroutine assign3_1
+  subroutine assign3_2(a,b)
+    implicit none
+    type(mint), intent(inout) :: a(:)
+    integer, intent(in) :: b
+    call assign3_1(a,int(b,8))
+    return
+  end subroutine assign3_2
+  subroutine assign4_1(a,b)
+    implicit none
+    type(mint), intent(inout) :: a(:,:)
+    integer(8), intent(in) :: b
+    integer :: n, i
+    n = size(a(:,1))
+    do i = 1, n
+      call assign3_1(a(i,:),b)
+    end do
+    return
+  end subroutine assign4_1
+  subroutine assign4_2(a,b)
+    implicit none
+    type(mint), intent(inout) :: a(:,:)
+    integer, intent(in) :: b
+    call assign4_1(a,int(b,8))
+    return
+  end subroutine assign4_2
   function add0(a,b) result(r)
     implicit none
     type(mint), intent(in) :: a, b
