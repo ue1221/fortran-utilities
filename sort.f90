@@ -3,7 +3,7 @@ module mod_sort
   private
   public :: swap, quick_sort, merge_sort, heap_sort, comb_sort
   public :: shell_sort, insertion_sort, gnome_sort, shaker_sort
-  public :: bitonic_sort !ToDo, Array length must be a power of 2.
+  public :: bitonic_sort
 contains
   subroutine swap(a,b)
     implicit none
@@ -116,8 +116,10 @@ contains
     h = n
     ok = .false.
     do while ((h.gt.1).or.(.not.ok))
-      h = (10*h)/13
-      if ((h.eq.9).or.(h.eq.10)) h = 11
+      if (h.gt.1) then
+        h = (10*h)/13
+        if ((h.eq.9).or.(h.eq.10)) h = 11
+      end if
       ok = .true.
       do i = 1, n-h
         if (a(i).gt.a(i+h)) then
@@ -214,8 +216,8 @@ contains
     integer :: n, i
     n = size(a)
     if (n.eq.1) return
-    call bitonic_sorter(a(1:n/2),.true.)
-    call bitonic_sorter(a(n/2+1:n),.false.)
+    call bitonic_sorter(a(1:n/2),.false.)
+    call bitonic_sorter(a(n/2+1:n),.true.)
     call bitonic_merger(a,.true.)
     return
   end subroutine bitonic_sort
@@ -226,8 +228,8 @@ contains
     integer :: n, i
     n = size(a)
     if (n.eq.1) return
-    call bitonic_sorter(a(1:n/2),.true.)
-    call bitonic_sorter(a(n/2+1:n),.false.)
+    call bitonic_sorter(a(1:n/2),.not.ascend)
+    call bitonic_sorter(a(n/2+1:n),ascend)
     call bitonic_merger(a,ascend)
     return
   end subroutine bitonic_sorter
@@ -235,24 +237,25 @@ contains
     implicit none
     integer, intent(inout) :: a(:)
     logical, intent(in) :: ascend
-    integer :: n, i
-    n = size(a)
-    if (n.eq.1) return
-    call bitonic_comparator(a,ascend)
-    call bitonic_merger(a(1:n/2),ascend)
-    call bitonic_merger(a(n/2+1:n),ascend)
-    return
-  end subroutine bitonic_merger
-  subroutine bitonic_comparator(a,ascend)
-    implicit none
-    integer, intent(inout) :: a(:)
-    logical, intent(in) :: ascend
     integer :: n, m, i
     n = size(a)
-    m = n/2
-    do i = 1, m
+    if (n.eq.1) return
+    m = max_pow_of_2(n)
+    do i = 1, n-m
       if ((a(i).gt.a(i+m)).eqv.ascend) call swap(a(i),a(i+m))
     end do
+    call bitonic_merger(a(1:m),ascend)
+    call bitonic_merger(a(m+1:n),ascend)
     return
-  end subroutine bitonic_comparator
+  end subroutine bitonic_merger
+  function max_pow_of_2(n) result(p)
+    implicit none
+    integer, intent(in) :: n
+    integer :: p
+    p = 1
+    do while (2*p.lt.n)
+      p = 2*p
+    end do
+    return
+  end function max_pow_of_2
 end module mod_sort
