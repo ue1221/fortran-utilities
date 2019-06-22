@@ -5,6 +5,7 @@ module mod_union_find
     integer, pointer :: par(:), rnk(:), siz(:)
   end type union_find
   private
+  public :: union_find
   public :: init_union_find, release_union_find, find, same, unite, size_of
 contains
   subroutine init_union_find(uf,n)
