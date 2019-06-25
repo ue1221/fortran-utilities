@@ -1,66 +1,74 @@
 module mod_binary_indexed_tree
   implicit none
-  integer :: n
-  integer, allocatable :: bit(:)
+  type fenwick_tree
+    integer :: n
+    integer, pointer :: arr(:)
+  end type fenwick_tree
   private
-  public :: initialize, finalize, add, summate, update, maximum
+  public :: fenwick_tree, init_bit, release_bit
+  public :: add, summate, update, maximum
 contains
-  subroutine initialize(m)
+  subroutine init_bit(bit,n)
     implicit none
-    integer, intent(in) :: m
-    n = m
-    if (allocated(bit)) deallocate(bit)
-    allocate(bit(n))
-    bit = 0
+    type(fenwick_tree) :: bit
+    integer, intent(in) :: n
+    bit%n = n
+    allocate(bit%arr(n))
+    bit%arr = 0
     return
-  end subroutine initialize
-  subroutine finalize()
+  end subroutine init_bit
+  subroutine release_bit(bit)
     implicit none
-    if (allocated(bit)) deallocate(bit)
+    type(fenwick_tree) :: bit
+    if (associated(bit%arr)) deallocate(bit%arr)
     return
-  end subroutine finalize
-  subroutine add(i,v)
+  end subroutine release_bit
+  subroutine add(bit,i,v)
     implicit none
+    type(fenwick_tree) :: bit
     integer, intent(in) :: i, v
     integer :: x
     x = i
-    do while (x.le.n)
-      bit(x) = bit(x)+v
+    do while (x.le.bit%n)
+      bit%arr(x) = bit%arr(x)+v
       x = x+and(x,-x)
     end do
     return
   end subroutine add
-  function summate(i) result(s)
+  function summate(bit,i) result(s)
     implicit none
+    type(fenwick_tree) :: bit
     integer, intent(in) :: i
     integer :: x, s
     x = i
     s = 0
     do while (x.gt.0)
-      s = s+bit(x)
+      s = s+bit%arr(x)
       x = x-and(x,-x)
     end do
     return
   end function summate
-  subroutine update(i,v)
+  subroutine update(bit,i,v)
     implicit none
+    type(fenwick_tree) :: bit
     integer, intent(in) :: i, v
     integer :: x
     x = i
-    do while (x.le.n)
-      if (bit(x).lt.v) bit(x) = v
+    do while (x.le.bit%n)
+      if (bit%arr(x).lt.v) bit%arr(x) = v
       x = x+and(x,-x)
     end do
     return
   end subroutine update
-  function maximum(i) result(m)
+  function maximum(bit,i) result(m)
     implicit none
+    type(fenwick_tree) :: bit
     integer, intent(in) :: i
     integer :: x, m
     x = i
     m = 0
     do while (x.gt.0)
-      m = max(m,bit(x))
+      m = max(m,bit%arr(x))
       x = x-and(x,-x)
     end do
     return
