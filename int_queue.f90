@@ -72,7 +72,7 @@ contains
     type(int_queue), intent(inout) :: queue
     type(int_node), pointer :: node
     integer :: z(2)
-    z = (/queue%tail%x,queue%tail%y/)
+    z = (/queue%head%x,queue%head%y/)
     node => queue%head%next
     call delete_node(queue%head)
     queue%head => node
