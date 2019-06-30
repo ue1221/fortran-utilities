@@ -13,9 +13,7 @@ contains
     type(union_find), intent(inout) :: uf
     integer, intent(in) :: n
     integer :: i
-    if (associated(uf%par)) deallocate(uf%par)
-    if (associated(uf%rnk)) deallocate(uf%rnk)
-    if (associated(uf%siz)) deallocate(uf%siz)
+    uf%n = n
     allocate(uf%par(n),uf%rnk(n),uf%siz(n))
     uf%rnk = 0
     uf%siz = 1
