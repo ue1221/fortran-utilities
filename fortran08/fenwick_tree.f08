@@ -1,4 +1,5 @@
 module mod_fenwick_tree
+  implicit none
 
   type t_fenwick_tree
     private
