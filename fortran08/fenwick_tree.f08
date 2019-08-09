@@ -14,12 +14,12 @@ module mod_fenwick_tree
     procedure :: lower_bound => get_lower_bound
     procedure :: update => get_updated
     procedure :: max => get_maximum
+    final :: finalize
   end type t_fenwick_tree
 
 contains
 
   subroutine init_bit(this,n)
-    implicit none
     class(t_fenwick_tree), intent(inout) :: this
     integer, intent(in) :: n
     integer :: p = 1
@@ -31,19 +31,21 @@ contains
       p = lshift(p,1)
     end do
     this%p = p
-    return
-  end subroutine init_bit
+  end
 
   subroutine release_bit(this)
-    implicit none
     class(t_fenwick_tree), intent(inout) :: this
 
     if (associated(this%arr)) deallocate(this%arr)
-    return
-  end subroutine release_bit
+  end
+
+  subroutine finalize(this)
+    type(t_fenwick_tree), intent(inout) :: this
+
+    if (associated(this%arr)) deallocate(this%arr)
+  end
 
   subroutine get_addition(this,i,v)
-    implicit none
     class(t_fenwick_tree), intent(inout) :: this
     integer, intent(in) :: i
     integer, intent(in) :: v
@@ -54,11 +56,9 @@ contains
       this%arr(x) = this%arr(x)+v
       x = x+and(x,-x)
     end do
-    return
-  end subroutine get_addition
+  end
 
   function get_summation(this,i) result(s)
-    implicit none
     class(t_fenwick_tree), intent(in) :: this
     integer, intent(in) :: i
     integer :: x
@@ -72,11 +72,9 @@ contains
       s = s+this%arr(x)
       x = x-and(x,-x)
     end do
-    return
-  end function get_summation
+  end
 
   function get_partial_summation(this,l,r) result(s)
-    implicit none
     class(t_fenwick_tree), intent(in) :: this
     integer, intent(in) :: l, r
     integer :: i, j
@@ -95,22 +93,18 @@ contains
       s = s-this%arr(i)
       i = i-and(i,-i)
     end do
-    return
-  end function get_partial_summation
+  end
 
   function get_value(this,i) result(v)
-    implicit none
     class(t_fenwick_tree), intent(in) :: this
     integer, intent(in) :: i
     integer :: x
     integer :: v
 
     v = get_partial_summation(this,i,i)
-    return
-  end function get_value
+  end
 
   function get_lower_bound(this,v) result(x)
-    implicit none
     class(t_fenwick_tree), intent(in) :: this
     integer, intent(in) :: v
     integer :: x, k
@@ -128,11 +122,9 @@ contains
       k = rshift(k,1)
     end do
     x = x+1
-    return
-  end function get_lower_bound
+  end
 
   subroutine get_updated(this,i,v)
-    implicit none
     class(t_fenwick_tree), intent(inout) :: this
     integer, intent(in) :: i
     integer, intent(in) :: v
@@ -143,11 +135,9 @@ contains
       if (this%arr(x) < v) this%arr(x) = v
       x = x+and(x,-x)
     end do
-    return
-  end subroutine get_updated
+  end
 
   function get_maximum(this,i) result(m)
-    implicit none
     class(t_fenwick_tree), intent(in) :: this
     integer, intent(in) :: i
     integer :: x, m
@@ -158,11 +148,9 @@ contains
       m = max(m,this%arr(x))
       x = x-and(x,-x)
     end do
-    return
-  end function get_maximum
+  end
 
   function len_of_lis(a) result(m)
-    implicit none
     integer, intent(in) :: a(:)
     type(t_fenwick_tree) :: bit
     integer :: m, n, i, t
@@ -175,11 +163,9 @@ contains
       m = max(m,t)
       call get_updated(bit,a(i),t)
     end do
-    return
-  end function len_of_lis
+  end
 
   function inv_num(a) result(m)
-    implicit none
     integer, intent(in) :: a(:)
     type(t_fenwick_tree) :: bit
     integer :: m, n, i, t
@@ -191,7 +177,6 @@ contains
       call get_addition(bit,a(i),1)
       m = m+i-get_summation(bit,a(i))
     end do
-    return
-  end function inv_num
+  end
 
 end module mod_fenwick_tree
