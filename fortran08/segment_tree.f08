@@ -17,15 +17,12 @@ module mod_segment_tree
 contains
 
   integer function op(x,y)
-    implicit none
-    integer :: x, y
+    integer, intent(in) :: x, y
 
     op = min(x,y)
-    return
-  end function op
+  end
 
   subroutine init_segtree(this,n,deflt)
-    implicit none
     class(t_segment_tree), intent(inout) :: this
     integer, intent(in) :: n
     integer, intent(in) :: deflt
@@ -39,7 +36,6 @@ contains
     this%p = p
     allocate(this%arr(2*p-1))
     this%arr = deflt
-    return
   end
 
   subroutine release_segtree(this)
