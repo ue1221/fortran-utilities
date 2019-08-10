@@ -1,64 +1,103 @@
 module mod_stack
+  implicit none
 
   type t_node
+    private
     integer :: item
     type(t_node), pointer :: prev => null()
     type(t_node), pointer :: next => null()
   end type t_node
 
   type t_stack
+    private
     integer :: num = 0
     type(t_node), pointer :: head => null()
     type(t_node), pointer :: tail => null()
+  contains
+    procedure :: push => push
+    procedure :: pop => pop
+    procedure :: peek => peek
+    procedure :: clear => clear
+    procedure :: size => size_of
+    final :: finalize
   end type t_stack
 
 contains
 
+  subroutine finalize(this)
+    type(t_stack), intent(inout) :: this
+
+    call clear(this)
+  end
+
   function new_node(item) result(node)
-    implicit none
     integer, intent(in) :: item
     type(t_node), pointer :: node
-    
+
     allocate(node)
     node%item = item
-    return
-  end function new_node
+  end
 
-  subroutine push(stack,item)
-    implicit none
-    type(t_stack), intent(inout) :: stack
+  subroutine push(this,item)
+    class(t_stack), intent(inout) :: this
     integer, intent(in) :: item
     type(t_node), pointer :: node
 
     node => new_node(item)
-    if (associated(stack%head)) then
-      node%prev => stack%tail
-      stack%tail%next => node
+    if (associated(this%head)) then
+      node%prev => this%tail
+      this%tail%next => node
     else
-      stack%head => node
+      this%head => node
     end if
-    stack%tail => node
-    stack%num = stack%num+1
-    return
-  end subroutine push
+    this%tail => node
+    this%num = this%num+1
+  end
 
-  function pop(stack) result(item)
-    implicit none
-    type(t_stack), intent(inout) :: stack
+  function pop(this) result(item)
+    class(t_stack), intent(inout) :: this
     integer :: item
     type(t_node), pointer :: node
 
-    item = stack%tail%item
-    node => stack%tail%prev
-    deallocate(stack%tail)
-    stack%tail => node
+    item = this%tail%item
+    node => this%tail%prev
+    deallocate(this%tail)
+    this%tail => node
     if (associated(node)) then
       node%next => null()
     else
-      stack%head => null()
+      this%head => null()
     end if
-    stack%num = stack%num-1
-    return
-  end function pop
+    this%num = this%num-1
+  end
+
+  function peek(this) result(item)
+    class(t_stack), intent(in) :: this
+    integer :: item
+
+    item = this%tail%item
+  end
+
+  subroutine clear(this)
+    class(t_stack), intent(inout) :: this
+    type(t_node), pointer :: node, prev
+
+    if (.not.associated(this%tail)) return
+    node => this%tail
+    do while (associated(node%prev))
+      prev => node%prev
+      deallocate(node)
+      node => prev
+    end do
+    this%head => null()
+    this%tail => null()
+    this%num = 0
+  end
+
+  integer function size_of(this)
+    class(t_stack), intent(in) :: this
+
+    size_of = this%num
+  end
 
 end module mod_stack
