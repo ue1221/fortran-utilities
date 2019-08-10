@@ -11,6 +11,8 @@ module mod_segment_tree
     procedure :: release => release_segtree
     procedure :: update => update
     procedure :: query => query
+    procedure :: default => set_default
+    procedure :: change => change_default
     final :: finalize
   end type t_segment_tree
 
@@ -61,6 +63,13 @@ contains
       x = x/2
       this%arr(x) = op(this%arr(2*x),this%arr(2*x+1))
     end do
+  end
+
+  subroutine change_default(this,deflt)
+    class(t_segment_tree), intent(inout) :: this
+    integer, intent(in) :: deflt
+
+    this%deflt = deflt
   end
 
   subroutine update(this,i,v)

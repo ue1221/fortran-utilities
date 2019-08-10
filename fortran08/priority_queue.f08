@@ -2,6 +2,7 @@ module mod_priority_queue
   implicit none
 
   type t_priority_queue
+    private
     integer :: num = 0
     integer, pointer :: heap(:) => null()
   contains
