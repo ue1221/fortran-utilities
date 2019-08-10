@@ -4,83 +4,100 @@ module mod_priority_queue
   type t_priority_queue
     integer :: num = 0
     integer, pointer :: heap(:) => null()
+  contains
+    procedure :: offer => offer
+    procedure :: clear => clear
+    procedure :: poll => poll
+    procedure :: peek => peek
+    procedure :: size => size_of
+    final :: finalize
   end type t_priority_queue
 
 contains
 
-  subroutine offer(pq,item)
-    implicit none
-    type(t_priority_queue), intent(inout) :: pq
+  integer function compare(a,b)
+    integer, intent(in) :: a, b
+    compare = a-b
+  end
+
+  subroutine finalize(this)
+    type(t_priority_queue), intent(inout) :: this
+
+    if (associated(this%heap)) deallocate(this%heap)
+  end
+
+  subroutine offer(this,item)
+    class(t_priority_queue), intent(inout) :: this
     integer, intent(in) :: item
     integer :: n, i, t
     integer, allocatable :: tmp(:)
 
-    if (.not.associated(pq%heap)) allocate(pq%heap(1))
-    if (pq%num == size(pq%heap)) then
-      allocate(tmp(pq%num))
-      tmp = pq%heap
-      deallocate(pq%heap)
-      allocate(pq%heap(2*pq%num))
-      pq%heap(1:pq%num) = tmp
+    if (.not.associated(this%heap)) allocate(this%heap(1))
+    if (this%num == size(this%heap)) then
+      allocate(tmp(this%num))
+      tmp = this%heap
+      deallocate(this%heap)
+      allocate(this%heap(2*this%num))
+      this%heap(1:this%num) = tmp
       deallocate(tmp)
     end if
 
-    pq%num = pq%num+1
-    pq%heap(pq%num) = item
+    this%num = this%num+1
+    this%heap(this%num) = item
 
-    n = pq%num
+    n = this%num
     do while (n > 1)
       i = n/2
-      if (pq%heap(n) < pq%heap(i)) then
-        t = pq%heap(n)
-        pq%heap(n) = pq%heap(i)
-        pq%heap(i) = t
+      if (compare(this%heap(n),this%heap(i)) < 0) then
+        t = this%heap(n)
+        this%heap(n) = this%heap(i)
+        this%heap(i) = t
       end if
       n = i
     end do
-    return
-  end subroutine offer
+  end
 
-  subroutine clear(pq)
-    implicit none
-    type(t_priority_queue), intent(inout) :: pq
+  subroutine clear(this)
+    class(t_priority_queue), intent(inout) :: this
 
-    if (associated(pq%heap)) deallocate(pq%heap)
-    pq%num = 0
-    return
-  end subroutine clear
+    if (associated(this%heap)) deallocate(this%heap)
+    this%num = 0
+  end
 
-  function poll(pq) result(item)
-    implicit none
-    type(t_priority_queue), intent(inout) :: pq
+  function poll(this) result(item)
+    class(t_priority_queue), intent(inout) :: this
     integer :: item, n, i, j, tmp
 
-    n = pq%num
-    item = pq%heap(1)
-    pq%heap(1) = pq%heap(n)
-    pq%num = pq%num-1
+    n = this%num
+    item = this%heap(1)
+    this%heap(1) = this%heap(n)
+    this%num = this%num-1
 
     i = 1
     do while (2*i < n)
       j = 2*i
-      if (j+1 < n .and. pq%heap(j+1) < pq%heap(j)) j = j+1
-      if (pq%heap(j) < pq%heap(i)) then
-        tmp = pq%heap(j)
-        pq%heap(j) = pq%heap(i)
-        pq%heap(i) = tmp
+      if (j+1 < n .and. compare(this%heap(j+1),this%heap(j)) < 0) j = j+1
+      if (compare(this%heap(j),this%heap(i)) < 0) then
+        tmp = this%heap(j)
+        this%heap(j) = this%heap(i)
+        this%heap(i) = tmp
       end if
       i = j
     end do
-    return
-  end function poll
+  end
 
-  function peek(pq) result(item)
-    implicit none
-    type(t_priority_queue), intent(inout) :: pq
+  function peek(this) result(item)
+    class(t_priority_queue), intent(in) :: this
     integer :: item
 
-    item = pq%heap(1)
-    return
-  end function peek
+    item = this%heap(1)
+  end
+
+  integer function size_of(this)
+    class(t_priority_queue), intent(in) :: this
+    integer :: item
+
+    size_of = this%num
+  end
 
 end module mod_priority_queue
