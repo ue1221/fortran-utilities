@@ -1,17 +1,21 @@
 module mod_tree_map
+  implicit none
 
   type t_entry
+    private
     integer :: key
     integer :: val
   end type t_entry
 
   type t_node
+    private
     type(t_node), pointer :: left => null(), right => null()
     integer :: level = 1
     type(t_entry), pointer :: e => null()
   end type t_node
 
   type t_tree_map
+    private
     type(t_node), pointer :: root => null()
     integer :: deflt = -1
   end type t_tree_map
@@ -19,7 +23,6 @@ module mod_tree_map
 contains
 
   function new_entry(key,val) result(e)
-    implicit none
     integer, intent(in) :: key
     integer, intent(in) :: val
     type(t_entry), pointer :: e
@@ -28,42 +31,34 @@ contains
     allocate(e)
     e%key = key
     e%val = val
-    return
-  end function new_entry
+  end
 
   function new_node(e) result(n)
-    implicit none
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: n
 
     n => null()
     allocate(n)
     n%e => e
-    return
-  end function new_node
+  end
 
   logical function is_leaf(n)
-    implicit none
     type(t_node), pointer, intent(in) :: n
 
     is_leaf = associated(n) .and. .not.associated(n%left) .and. &
     &         .not.associated(n%right)
-    return
-  end function is_leaf
+  end
 
   recursive function tree_size(n) result(s)
-    implicit none
     type(t_node), pointer, intent(in) :: n
     integer :: s
 
     s = 0
     if (.not.associated(n)) return
     s = 1+tree_size(n%left)+tree_size(n%right)
-    return
-  end function tree_size
+  end
 
   function skew(n) result(l)
-    implicit none
     type(t_node), pointer, intent(in) :: n
     type(t_node), pointer :: l
 
@@ -73,11 +68,9 @@ contains
     l => n%left
     n%left => l%right
     l%right => n
-    return
-  end function skew
+  end
 
   function split(n) result(r)
-    implicit none
     type(t_node), pointer, intent(in) :: n
     type(t_node), pointer :: r
 
@@ -88,11 +81,9 @@ contains
     n%right => r%left
     r%left => n
     r%level = r%level+1
-    return
-  end function split
+  end
 
   function predecessor(n) result(p)
-    implicit none
     type(t_node), pointer, intent(in) :: n
     type(t_node), pointer :: p
 
@@ -102,11 +93,9 @@ contains
     do while (associated(p%right))
       p => p%right
     end do
-    return
-  end function predecessor
+  end
 
   function successor(n) result(s)
-    implicit none
     type(t_node), pointer, intent(in) :: n
     type(t_node), pointer :: s
 
@@ -116,11 +105,9 @@ contains
     do while (associated(s%left))
       s => s%left
     end do
-    return
-  end function successor
+  end
 
   recursive function insert(n,e) result(t)
-    implicit none
     type(t_node), pointer, intent(in) :: n
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: t
@@ -138,11 +125,9 @@ contains
 
     t => skew(t)
     t => split(t)
-    return
-  end function insert
+  end
 
   recursive function delete(n,e) result(t)
-    implicit none
     type(t_node), pointer, intent(in) :: n
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: t, l
@@ -172,11 +157,9 @@ contains
     if (associated(t%right)) t%right%right => skew(t%right%right)
     t => split(t)
     t%right => split(t%right)
-    return
-  end function delete
+  end
 
   function decrease_level(n) result(t)
-    implicit none
     type(t_node), pointer, intent(in) :: n
     type(t_node), pointer :: t
     integer :: should_be
@@ -187,22 +170,18 @@ contains
       t%level = should_be
       if (t%right%level > should_be) t%right%level = should_be
     end if
-    return
-  end function decrease_level
+  end
 
   recursive subroutine release_tree(t)
-    implicit none
     type(t_node), pointer, intent(inout) :: t
 
     if (.not.associated(t)) return
     call release_tree(t%left)
     call release_tree(t%right)
     deallocate(t)
-    return
-  end subroutine release_tree
+  end
 
   recursive subroutine get_keys_list(t,keys,num)
-    implicit none
     type(t_node), pointer, intent(in) :: t
     integer, intent(inout) :: keys(:)
     integer, intent(inout) :: num
@@ -212,55 +191,43 @@ contains
     num = num+1
     keys(num) = t%e%key
     call get_keys_list(t%right,keys,num)
-    return
-  end subroutine get_keys_list
+  end
 
   integer function size_of(map)
-    implicit none
     type(t_tree_map), intent(in) :: map
 
     size_of = tree_size(map%root)
-    return
-  end function size_of
+  end
 
   subroutine clear(map)
-    implicit none
     type(t_tree_map), intent(inout) :: map
 
     call release_tree(map%root)
     map%root => null()
-    return
-  end subroutine clear
+  end
 
   subroutine set_default(map,deflt)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     integer, intent(in) :: deflt
 
     map%deflt = deflt
-    return
-  end subroutine set_default
+  end
 
   subroutine put_entry(map,e)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer, intent(in) :: e
 
     map%root => insert(map%root,e)
-    return
-  end subroutine put_entry
+  end
 
   subroutine remove_entry(map,e)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer, intent(in) :: e
 
     map%root => delete(map%root,e)
-    return
-  end subroutine remove_entry
+  end
 
   function get_entry(map,e) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: n
@@ -278,11 +245,9 @@ contains
         return
       end if
     end do
-    return
-  end function get_entry
+  end
 
   function contain_entry(map,e) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: n
@@ -300,11 +265,9 @@ contains
         return
       end if
     end do
-    return
-  end function contain_entry
+  end
 
   function get_first_entry(map) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_node), pointer :: n
     type(t_entry), pointer :: ret
@@ -316,11 +279,9 @@ contains
       n => n%left
     end do
     ret => n%e
-    return
-  end function get_first_entry
+  end
 
   function poll_first_entry(map) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_node), pointer :: n
     type(t_entry), pointer :: ret
@@ -334,11 +295,9 @@ contains
     ret => n%e
 
     map%root => delete(map%root,ret)
-    return
-  end function poll_first_entry
+  end
 
   function get_last_entry(map) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_node), pointer :: n
     type(t_entry), pointer :: ret
@@ -350,11 +309,9 @@ contains
       n => n%right
     end do
     ret => n%e
-    return
-  end function get_last_entry
+  end
 
   function poll_last_entry(map) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_node), pointer :: n
     type(t_entry), pointer :: ret
@@ -368,11 +325,9 @@ contains
     ret => n%e
 
     map%root => delete(map%root,ret)
-    return
-  end function poll_last_entry
+  end
 
   function floor_entry(map,e) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: n
@@ -395,21 +350,17 @@ contains
         return
       end if
     end do
-    return
-  end function floor_entry
+  end
 
   function lower_entry(map,e) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer, intent(in) :: e
     type(t_entry), pointer :: ret
 
     ret => floor_entry(map,new_entry(e%key-1,0))
-    return
-  end function lower_entry
+  end
 
   function ceiling_entry(map,e) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: n
@@ -432,21 +383,17 @@ contains
         return
       end if
     end do
-    return
-  end function ceiling_entry
+  end
 
   function higher_entry(map,e) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer, intent(in) :: e
     type(t_entry), pointer :: ret
 
     ret => ceiling_entry(map,new_entry(e%key+1,0))
-    return
-  end function higher_entry
+  end
 
   subroutine get_keys(map,keys,num)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     integer, intent(inout) :: keys(:)
     integer, intent(inout) :: num
@@ -454,30 +401,24 @@ contains
     keys = 0
     num = 0
     call get_keys_list(map%root,keys,num)
-    return
-  end subroutine get_keys
+  end
 
   subroutine put(map,key,val)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     integer, intent(in) :: key
     integer, intent(in) :: val
 
     call put_entry(map,new_entry(key,val))
-    return
-  end subroutine put
+  end
 
   subroutine remove(map,key)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     integer, intent(in) :: key
 
     call remove_entry(map,new_entry(key,0))
-    return
-  end subroutine remove
+  end
 
   function get(map,key) result(val)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     integer, intent(in) :: key
     type(t_entry), pointer :: tmp
@@ -487,20 +428,16 @@ contains
     tmp => get_entry(map,new_entry(key,0))
     if (.not.associated(tmp)) return
     val = tmp%val
-    return
-  end function get
+  end
 
   logical function contain(map,key)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     integer, intent(in) :: key
 
     contain = contain_entry(map,new_entry(key,0))
-    return
-  end function contain
+  end
 
   function get_first_key(map) result(key)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer :: tmp
     integer :: key
@@ -509,11 +446,9 @@ contains
     tmp => get_first_entry(map)
     if (.not.associated(tmp)) return
     key = tmp%key
-    return
-  end function get_first_key
+  end
 
   function get_last_key(map) result(key)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer :: tmp
     integer :: key
@@ -522,11 +457,9 @@ contains
     tmp => get_last_entry(map)
     if (.not.associated(tmp)) return
     key = tmp%key
-    return
-  end function get_last_key
+  end
 
   function floor_key(map,key) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     integer, intent(in) :: key
     type(t_entry), pointer :: tmp
@@ -536,11 +469,9 @@ contains
     tmp => floor_entry(map,new_entry(key,0))
     if (.not.associated(tmp)) return
     ret = tmp%key
-    return
-  end function floor_key
+  end
 
   function lower_key(map,key) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     integer, intent(in) :: key
     type(t_entry), pointer :: tmp
@@ -550,11 +481,9 @@ contains
     tmp => lower_entry(map,new_entry(key,0))
     if (.not.associated(tmp)) return
     ret = tmp%key
-    return
-  end function lower_key
+  end
 
   function ceiling_key(map,key) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     integer, intent(in) :: key
     type(t_entry), pointer :: tmp
@@ -564,11 +493,9 @@ contains
     tmp => ceiling_entry(map,new_entry(key,0))
     if (.not.associated(tmp)) return
     ret = tmp%key
-    return
-  end function ceiling_key
+  end
 
   function higher_key(map,key) result(ret)
-    implicit none
     type(t_tree_map), intent(inout) :: map
     integer, intent(in) :: key
     type(t_entry), pointer :: tmp
@@ -578,7 +505,6 @@ contains
     tmp => higher_entry(map,new_entry(key,0))
     if (.not.associated(tmp)) return
     ret = tmp%key
-    return
-  end function higher_key
+  end
 
 end module mod_tree_map
