@@ -1,192 +1,197 @@
 module mod_linked_list
+  implicit none
 
   type t_node
+    private
     integer :: item
     type(t_node), pointer :: prev => null()
     type(t_node), pointer :: next => null()
   end type t_node
 
   type t_linked_list
+    private
     integer :: num = 0
     type(t_node), pointer :: head => null()
     type(t_node), pointer :: tail => null()
+  contains
+    procedure :: add_first => add_first
+    procedure :: add_last => add_last
+    procedure :: poll_first => poll_first
+    procedure :: poll_last => poll_last
+    procedure :: peek_first => peek_first
+    procedure :: peek_last => peek_last
+    procedure :: clear => clear
+    procedure :: get => get
+    procedure :: remove => remove
+    procedure :: replace => replace
+    procedure :: first_index_of => first_index_of
+    procedure :: last_index_of => last_index_of
+    procedure :: size => size_of
+    final :: finalize
   end type t_linked_list
 
 contains
 
+  subroutine finalize(this)
+    type(t_linked_list), intent(inout) :: this
+
+    call clear(this)
+  end
+
   function new_node(item) result(node)
-    implicit none
     integer, intent(in) :: item
     type(t_node), pointer :: node
 
     allocate(node)
     node%item = item
-    return
-  end function new_node
+  end
 
-  subroutine add_first(list,item)
-    implicit none
-    type(t_linked_list), intent(inout) :: list
+  subroutine add_first(this,item)
+    class(t_linked_list), intent(inout) :: this
     integer, intent(in) :: item
     type(t_node), pointer :: node
 
     node => new_node(item)
-    if (associated(list%tail)) then
-      node%next => list%head
-      list%head%prev => node
+    if (associated(this%tail)) then
+      node%next => this%head
+      this%head%prev => node
     else
-      list%tail => node
+      this%tail => node
     end if
-    list%head => node
-    list%num = list%num+1
-    return
-  end subroutine add_first
+    this%head => node
+    this%num = this%num+1
+  end
 
-  subroutine add_last(list,item)
-    implicit none
-    type(t_linked_list), intent(inout) :: list
+  subroutine add_last(this,item)
+    class(t_linked_list), intent(inout) :: this
     integer, intent(in) :: item
     type(t_node), pointer :: node
 
     node => new_node(item)
-    if (associated(list%head)) then
-      node%prev => list%tail
-      list%tail%next => node
+    if (associated(this%head)) then
+      node%prev => this%tail
+      this%tail%next => node
     else
-      list%head => node
+      this%head => node
     end if
-    list%tail => node
-    list%num = list%num+1
-    return
-  end subroutine add_last
+    this%tail => node
+    this%num = this%num+1
+  end
 
-  function poll_first(list) result(item)
-    implicit none
-    type(t_linked_list), intent(inout) :: list
+  function poll_first(this) result(item)
+    class(t_linked_list), intent(inout) :: this
     integer :: item
     type(t_node), pointer :: node
 
-    item = list%head%item
-    node => list%head%next
-    deallocate(list%head)
-    list%head => node
+    item = this%head%item
+    node => this%head%next
+    deallocate(this%head)
+    this%head => node
     if (associated(node)) then
       node%prev => null()
     else
-      list%tail => null()
+      this%tail => null()
     end if
-    list%num = list%num-1
-    return
-  end function poll_first
+    this%num = this%num-1
+  end
 
-  function poll_last(list) result(item)
-    implicit none
-    type(t_linked_list), intent(inout) :: list
+  function poll_last(this) result(item)
+    class(t_linked_list), intent(inout) :: this
     integer :: item
     type(t_node), pointer :: node
 
-    item = list%tail%item
-    node => list%tail%prev
-    deallocate(list%tail)
-    list%tail => node
+    item = this%tail%item
+    node => this%tail%prev
+    deallocate(this%tail)
+    this%tail => node
     if (associated(node)) then
       node%next => null()
     else
-      list%head => null()
+      this%head => null()
     end if
-    list%num = list%num-1
-    return
-  end function poll_last
+    this%num = this%num-1
+  end
 
-  function peek_first(list) result(item)
-    implicit none
-    type(t_linked_list), intent(inout) :: list
+  function peek_first(this) result(item)
+    class(t_linked_list), intent(in) :: this
     integer :: item
 
-    item = list%head%item
-    return
-  end function peek_first
+    item = this%head%item
+  end
 
-  function peek_last(list) result(item)
-    implicit none
-    type(t_linked_list), intent(inout) :: list
+  function peek_last(this) result(item)
+    class(t_linked_list), intent(in) :: this
     integer :: item
 
-    item = list%tail%item
-    return
-  end function peek_last
+    item = this%tail%item
+  end
 
-  subroutine clear(list)
-    implicit none
-    type(t_linked_list), intent(inout) :: list
+  subroutine clear(this)
+    class(t_linked_list), intent(inout) :: this
     type(t_node), pointer :: node, next
 
-    if (.not.associated(list%head)) return
-    node => list%head
+    if (.not.associated(this%head)) return
+    node => this%head
     do while (associated(node%next))
       next => node%next
       deallocate(node)
       node => next
     end do
-    list%head => null()
-    list%tail => null()
-    list%num = 0
-    return
-  end subroutine clear
+    this%head => null()
+    this%tail => null()
+    this%num = 0
+  end
 
-  function get(list,i) result(item)
-    implicit none
-    type(t_linked_list), intent(inout) :: list
+  function get(this,i) result(item)
+    class(t_linked_list), intent(in) :: this
     integer, intent(in) :: i
     integer :: item, idx
     type(t_node), pointer :: node
 
-    if (i <= (list%num+1)/2) then
+    if (i <= (this%num+1)/2) then
       idx = 1
-      node => list%head
+      node => this%head
       do while (idx < i)
         node => node%next
         idx = idx+1
       end do
     else
-      idx = list%num
-      node => list%tail
+      idx = this%num
+      node => this%tail
       do while (idx > i)
         node => node%prev
         idx = idx-1
       end do
     end if
     item = node%item
-    return
-  end function get
+  end
 
-  function remove(list,i) result(item)
-    implicit none
-    type(t_linked_list), intent(inout) :: list
+  function remove(this,i) result(item)
+    class(t_linked_list), intent(inout) :: this
     integer, intent(in) :: i
     integer :: item, idx
     type(t_node), pointer :: node
 
     if (i == 1) then
-      item = poll_first(list)
+      item = poll_first(this)
       return
     end if
 
-    if (i == list%num) then
-      item = poll_last(list)
+    if (i == this%num) then
+      item = poll_last(this)
       return
     end if
 
-    if (i <= (list%num+1)/2) then
+    if (i <= (this%num+1)/2) then
       idx = 1
-      node => list%head
+      node => this%head
       do while (idx < i)
         node => node%next
         idx = idx+1
       end do
     else
-      idx = list%num
-      node => list%tail
+      idx = this%num
+      node => this%tail
       do while (idx > i)
         node => node%prev
         idx = idx-1
@@ -197,86 +202,83 @@ contains
     node%prev%next => node%next
     node%next%prev => node%prev
     deallocate(node)
-    list%num = list%num-1
-    return
-  end function remove
+    this%num = this%num-1
+  end
 
-  subroutine replace(list,i,item)
-    implicit none
-    type(t_linked_list), intent(inout) :: list
+  subroutine replace(this,i,item)
+    class(t_linked_list), intent(inout) :: this
     integer, intent(in) :: i, item
     integer :: idx
     type(t_node), pointer :: node
 
-    if (i <= (list%num+1)/2) then
+    if (i <= (this%num+1)/2) then
       idx = 1
-      node => list%head
+      node => this%head
       do while (idx < i)
         node => node%next
         idx = idx+1
       end do
     else
-      idx = list%num
-      node => list%tail
+      idx = this%num
+      node => this%tail
       do while (idx > i)
         node => node%prev
         idx = idx-1
       end do
     end if
     node%item = item
-    return
-  end subroutine replace
+  end
 
-  subroutine show_all(list)
-    implicit none
-    type(t_linked_list), intent(inout) :: list
+  subroutine show_all(this)
+    type(t_linked_list), intent(in) :: this
     type(t_node), pointer :: node, next
 
-    if (.not.associated(list%head)) return
-    node => list%head
+    if (.not.associated(this%head)) return
+    node => this%head
     write(*,'(i0)',advance='no') node%item
     do while (associated(node%next))
       node => node%next
       write(*,'(x,i0)',advance='no') node%item
     end do
     write(*,*)
-    return
-  end subroutine show_all
+  end
 
-  function first_index_of(list,item) result(idx)
-    implicit none
-    type(t_linked_list), intent(inout) :: list
+  function first_index_of(this,item) result(idx)
+    class(t_linked_list), intent(in) :: this
     integer, intent(in) :: item
     integer :: idx
     type(t_node), pointer :: node
 
     idx = 1
-    node => list%head
+    node => this%head
     do while (associated(node))
       if (node%item == item) return
       node => node%next
       idx = idx+1
     end do
     idx = -1
-    return
-  end function first_index_of
+  end
 
-  function last_index_of(list,item) result(idx)
-    implicit none
-    type(t_linked_list), intent(inout) :: list
+  function last_index_of(this,item) result(idx)
+    class(t_linked_list), intent(in) :: this
     integer, intent(in) :: item
     integer :: idx
     type(t_node), pointer :: node
 
-    idx = list%num
-    node => list%tail
+    idx = this%num
+    node => this%tail
     do while (associated(node))
       if (node%item == item) return
       node => node%prev
       idx = idx-1
     end do
     idx = -1
-    return
-  end function last_index_of
+  end
+
+  integer function size_of(this)
+    class(t_linked_list), intent(in) :: this
+
+    size_of = this%num
+  end
 
 end module mod_linked_list
