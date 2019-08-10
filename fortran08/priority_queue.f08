@@ -96,7 +96,6 @@ contains
 
   integer function size_of(this)
     class(t_priority_queue), intent(in) :: this
-    integer :: item
 
     size_of = this%num
   end
