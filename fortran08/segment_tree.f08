@@ -28,8 +28,9 @@ contains
     class(t_segment_tree), intent(inout) :: this
     integer, intent(in) :: n
     integer, intent(in) :: deflt
-    integer :: p = 1
+    integer :: p
 
+    p = 1
     do while (p < n)
       p = 2*p
     end do

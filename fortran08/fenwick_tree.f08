@@ -23,8 +23,9 @@ contains
   subroutine init_bit(this,n)
     class(t_fenwick_tree), intent(inout) :: this
     integer, intent(in) :: n
-    integer :: p = 1
+    integer :: p
 
+    p = 1
     this%n = n
     allocate(this%arr(n))
     this%arr = 0
