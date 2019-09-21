@@ -26,7 +26,6 @@ contains
     integer, intent(in) :: key
     integer, intent(in) :: val
     type(t_entry), pointer :: e
-
     e => null()
     allocate(e)
     e%key = key
@@ -36,15 +35,20 @@ contains
   function new_node(e) result(n)
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: n
-
     n => null()
     allocate(n)
     n%e => e
   end
 
+  integer function level(n)
+    type(t_node), pointer, intent(in) :: n
+    level = 0
+    if (.not.associated(n)) return
+    level = n%level
+  end
+
   logical function is_leaf(n)
     type(t_node), pointer, intent(in) :: n
-
     is_leaf = associated(n) .and. .not.associated(n%left) .and. &
     &         .not.associated(n%right)
   end
@@ -52,7 +56,6 @@ contains
   recursive function tree_size(n) result(s)
     type(t_node), pointer, intent(in) :: n
     integer :: s
-
     s = 0
     if (.not.associated(n)) return
     s = 1+tree_size(n%left)+tree_size(n%right)
@@ -61,7 +64,6 @@ contains
   function skew(n) result(l)
     type(t_node), pointer, intent(in) :: n
     type(t_node), pointer :: l
-
     l => n
     if (.not.(associated(n) .and. associated(n%left) .and. &
     &   n%left%level == n%level)) return
@@ -73,7 +75,6 @@ contains
   function split(n) result(r)
     type(t_node), pointer, intent(in) :: n
     type(t_node), pointer :: r
-
     r => n
     if (.not.(associated(n) .and. associated(n%right) .and. &
     &   associated(n%right%right) .and. n%right%right%level == n%level)) return
@@ -86,7 +87,6 @@ contains
   function predecessor(n) result(p)
     type(t_node), pointer, intent(in) :: n
     type(t_node), pointer :: p
-
     p => null()
     if (.not.associated(n%left)) return
     p => n%left
@@ -98,7 +98,6 @@ contains
   function successor(n) result(s)
     type(t_node), pointer, intent(in) :: n
     type(t_node), pointer :: s
-
     s => null()
     if (.not.associated(n%right)) return
     s => n%right
@@ -111,7 +110,6 @@ contains
     type(t_node), pointer, intent(in) :: n
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: t
-
     t => new_node(e)
     if (.not.associated(n)) return
     t => n
@@ -122,7 +120,6 @@ contains
     else
       t%e => e
     end if
-
     t => skew(t)
     t => split(t)
   end
@@ -131,7 +128,6 @@ contains
     type(t_node), pointer, intent(in) :: n
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: t, l
-
     t => n
     if (.not.associated(n)) return
     if (e%key < t%e%key) then
@@ -150,7 +146,6 @@ contains
         t%e => l%e
       end if
     end if
-
     t => decrease_level(t)
     t => skew(t)
     t%right => skew(t%right)
@@ -163,18 +158,16 @@ contains
     type(t_node), pointer, intent(in) :: n
     type(t_node), pointer :: t
     integer :: should_be
-
     t => n
-    should_be = min(t%left%level,t%right%level)+1
+    should_be = min(level(t%left),level(t%right))+1
     if (t%level > should_be) then
       t%level = should_be
-      if (t%right%level > should_be) t%right%level = should_be
+      if (level(t%right) > should_be) t%right%level = should_be
     end if
   end
 
   recursive subroutine release_tree(t)
     type(t_node), pointer, intent(inout) :: t
-
     if (.not.associated(t)) return
     call release_tree(t%left)
     call release_tree(t%right)
@@ -185,7 +178,6 @@ contains
     type(t_node), pointer, intent(in) :: t
     integer, intent(inout) :: keys(:)
     integer, intent(inout) :: num
-
     if (.not.associated(t)) return
     call get_keys_list(t%left,keys,num)
     num = num+1
@@ -195,13 +187,11 @@ contains
 
   integer function size_of(map)
     type(t_tree_map), intent(in) :: map
-
     size_of = tree_size(map%root)
   end
 
   subroutine clear(map)
     type(t_tree_map), intent(inout) :: map
-
     call release_tree(map%root)
     map%root => null()
   end
@@ -209,21 +199,18 @@ contains
   subroutine set_default(map,deflt)
     type(t_tree_map), intent(inout) :: map
     integer, intent(in) :: deflt
-
     map%deflt = deflt
   end
 
   subroutine put_entry(map,e)
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer, intent(in) :: e
-
     map%root => insert(map%root,e)
   end
 
   subroutine remove_entry(map,e)
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer, intent(in) :: e
-
     map%root => delete(map%root,e)
   end
 
@@ -232,7 +219,6 @@ contains
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: n
     type(t_entry), pointer :: ret
-
     ret => null()
     n => map%root
     do while (associated(n))
@@ -252,7 +238,6 @@ contains
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: n
     logical :: ret
-
     ret = .false.
     n => map%root
     do while (associated(n))
@@ -271,7 +256,6 @@ contains
     type(t_tree_map), intent(inout) :: map
     type(t_node), pointer :: n
     type(t_entry), pointer :: ret
-
     ret => null()
     n => map%root
     if (.not.associated(n)) return
@@ -285,7 +269,6 @@ contains
     type(t_tree_map), intent(inout) :: map
     type(t_node), pointer :: n
     type(t_entry), pointer :: ret
-
     ret => null()
     n => map%root
     if (.not.associated(n)) return
@@ -293,7 +276,6 @@ contains
       n => n%left
     end do
     ret => n%e
-
     map%root => delete(map%root,ret)
   end
 
@@ -301,7 +283,6 @@ contains
     type(t_tree_map), intent(inout) :: map
     type(t_node), pointer :: n
     type(t_entry), pointer :: ret
-
     ret => null()
     n => map%root
     if (.not.associated(n)) return
@@ -315,7 +296,6 @@ contains
     type(t_tree_map), intent(inout) :: map
     type(t_node), pointer :: n
     type(t_entry), pointer :: ret
-
     ret => null()
     n => map%root
     if (.not.associated(n)) return
@@ -323,7 +303,6 @@ contains
       n => n%right
     end do
     ret => n%e
-
     map%root => delete(map%root,ret)
   end
 
@@ -332,7 +311,6 @@ contains
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: n
     type(t_entry), pointer :: ret
-
     ret => null()
     n => map%root
     do while (associated(n))
@@ -356,7 +334,6 @@ contains
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer, intent(in) :: e
     type(t_entry), pointer :: ret
-
     ret => floor_entry(map,new_entry(e%key-1,0))
   end
 
@@ -365,7 +342,6 @@ contains
     type(t_entry), pointer, intent(in) :: e
     type(t_node), pointer :: n
     type(t_entry), pointer :: ret
-
     ret => null()
     n => map%root
     do while (associated(n))
@@ -389,7 +365,6 @@ contains
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer, intent(in) :: e
     type(t_entry), pointer :: ret
-
     ret => ceiling_entry(map,new_entry(e%key+1,0))
   end
 
@@ -397,7 +372,6 @@ contains
     type(t_tree_map), intent(inout) :: map
     integer, intent(inout) :: keys(:)
     integer, intent(inout) :: num
-
     keys = 0
     num = 0
     call get_keys_list(map%root,keys,num)
@@ -407,14 +381,12 @@ contains
     type(t_tree_map), intent(inout) :: map
     integer, intent(in) :: key
     integer, intent(in) :: val
-
     call put_entry(map,new_entry(key,val))
   end
 
   subroutine remove(map,key)
     type(t_tree_map), intent(inout) :: map
     integer, intent(in) :: key
-
     call remove_entry(map,new_entry(key,0))
   end
 
@@ -423,7 +395,6 @@ contains
     integer, intent(in) :: key
     type(t_entry), pointer :: tmp
     integer :: val
-
     val = map%deflt
     tmp => get_entry(map,new_entry(key,0))
     if (.not.associated(tmp)) return
@@ -433,7 +404,6 @@ contains
   logical function contain(map,key)
     type(t_tree_map), intent(inout) :: map
     integer, intent(in) :: key
-
     contain = contain_entry(map,new_entry(key,0))
   end
 
@@ -441,7 +411,6 @@ contains
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer :: tmp
     integer :: key
-
     key = map%deflt
     tmp => get_first_entry(map)
     if (.not.associated(tmp)) return
@@ -452,7 +421,6 @@ contains
     type(t_tree_map), intent(inout) :: map
     type(t_entry), pointer :: tmp
     integer :: key
-
     key = map%deflt
     tmp => get_last_entry(map)
     if (.not.associated(tmp)) return
@@ -464,7 +432,6 @@ contains
     integer, intent(in) :: key
     type(t_entry), pointer :: tmp
     integer :: ret
-
     ret = map%deflt
     tmp => floor_entry(map,new_entry(key,0))
     if (.not.associated(tmp)) return
@@ -476,7 +443,6 @@ contains
     integer, intent(in) :: key
     type(t_entry), pointer :: tmp
     integer :: ret
-
     ret = map%deflt
     tmp => lower_entry(map,new_entry(key,0))
     if (.not.associated(tmp)) return
@@ -488,7 +454,6 @@ contains
     integer, intent(in) :: key
     type(t_entry), pointer :: tmp
     integer :: ret
-
     ret = map%deflt
     tmp => ceiling_entry(map,new_entry(key,0))
     if (.not.associated(tmp)) return
@@ -500,7 +465,6 @@ contains
     integer, intent(in) :: key
     type(t_entry), pointer :: tmp
     integer :: ret
-
     ret = map%deflt
     tmp => higher_entry(map,new_entry(key,0))
     if (.not.associated(tmp)) return
