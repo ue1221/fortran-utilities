@@ -204,7 +204,7 @@ contains
   pure type(modint) function dot_prod(x,y) result(ret)
     type(modint), intent(in) :: x(:), y(:)
     integer :: i
-    if (size(x,1) /= size(y,1)) i = to_int64("")
+    if (size(x,1) /= size(y,1)) i = to_int64('')
     do i = 1, size(x,1)
       call asgn(ret,add(ret,mul(x(i),y(i))))
     end do
@@ -213,7 +213,6 @@ contains
     type(modint), intent(in) :: x(:,:), y(:)
     type(modint) :: ret(size(x,1))
     integer :: i
-    if (size(x,2) /= size(y,1)) i = to_int64("")
     do i = 1, size(x,1)
       call asgn(ret(i),dot_prod(x(i,:),y))
     end do
@@ -222,7 +221,6 @@ contains
     type(modint), intent(in) :: x(:), y(:,:)
     type(modint) :: ret(size(y,2))
     integer :: i
-    if (size(x,1) /= size(y,1)) i = to_int64("")
     do i = 1, size(y,2)
       call asgn(ret(i),dot_prod(x,y(:,i)))
     end do
@@ -231,7 +229,6 @@ contains
     type(modint), intent(in) :: x(:,:), y(:,:)
     type(modint) :: ret(size(x,1),size(y,2))
     integer :: i
-    if (size(x,2) /= size(y,1)) i = to_int64("")
     do i = 1, size(x,1)
       call asgn(ret(i,:),matmul2(x(i,:),y))
     end do
