@@ -89,7 +89,11 @@ contains
 
   integer function shr(i, n) result(res)
     integer, intent(in) :: i, n
-    res = ibclr(rshift(i, n), 31)
+    if (n == 0) then
+      res = i
+    else
+      res = rshift(ibclr(rshift(i, 1), 31), n-1)
+    end if
   end
 
   integer function hash(i) result(res)
